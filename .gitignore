@@ -20,3 +20,5 @@ Thumbs.db
 
 # Entity Framework
 Migrations/*.Designer.cs
+
+*.json
