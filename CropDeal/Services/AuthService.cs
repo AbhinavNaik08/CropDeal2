@@ -114,6 +114,9 @@ namespace CropDeal.Services
             if (user == null)
                 throw new UnauthorizedException("Invalid email or password");
 
+            if(await _userManager.IsLockedOutAsync(user))
+                throw new UnauthorizedException("User account is locked. Please contact support.");
+
             var validPassword =
                 await _userManager.CheckPasswordAsync(user, loginDto.Password);
 

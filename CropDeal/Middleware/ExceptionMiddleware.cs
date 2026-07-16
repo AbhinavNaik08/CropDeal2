@@ -21,79 +21,56 @@ namespace CropDeal.Middleware
             {
                 await _next(context);
             }
+            catch (NotFoundException ex)
+            {
+                await HandleException(context, ex, HttpStatusCode.NotFound, logAsError: false);
+            }
+            catch (BadRequestException ex)
+            {
+                await HandleException(context, ex, HttpStatusCode.BadRequest, logAsError: false);
+            }
+            catch (UnauthorizedException ex)
+            {
+                await HandleException(context, ex, HttpStatusCode.Unauthorized, logAsError: false);
+            }
+            catch (ForbiddenException ex)
+            {
+                await HandleException(context, ex, HttpStatusCode.Forbidden, logAsError: false);
+            }
             catch (Exception ex)
             {
-                await HandleExceptionAsync(context, ex);
+                await HandleException(context, ex, HttpStatusCode.InternalServerError, logAsError: true);
             }
         }
 
-        private Task HandleExceptionAsync(HttpContext context, Exception exception)
+        private async Task HandleException(HttpContext context, Exception ex, HttpStatusCode statusCode, bool logAsError)
         {
-            HttpStatusCode statusCode;
-            string message;
-            bool logAsError;
-
-            if (exception is NotFoundException)
-            {
-                statusCode = HttpStatusCode.NotFound;
-                message = exception.Message;
-                logAsError = false;
-            }
-            else if (exception is BadRequestException)
-            {
-                statusCode = HttpStatusCode.BadRequest;
-                message = exception.Message;
-                logAsError = false;
-            }
-            else if (exception is UnauthorizedException)
-            {
-                statusCode = HttpStatusCode.Unauthorized;
-                message = exception.Message;
-                logAsError = false;
-            }
-            else if (exception is ForbiddenException)
-            {
-                statusCode = HttpStatusCode.Forbidden;
-                message = exception.Message;
-                logAsError = false;
-            }
-            else
-            {
-                statusCode = HttpStatusCode.InternalServerError;
-                message = "An unexpected error occurred. Please try again later.";
-                logAsError = true;
-            }
-
             if (logAsError)
             {
-                _logger.LogError(exception,
-                    "Unhandled exception occurred while processing {Method} {Path}",
-                    context.Request.Method,
-                    context.Request.Path);
+                _logger.LogError(ex, "Unhandled exception occurred while processing {Method} {Path}",
+                    context.Request.Method, context.Request.Path);
             }
             else
             {
-                _logger.LogWarning(
-                    "{ExceptionType} occurred while processing {Method} {Path}: {Message}",
-                    exception.GetType().Name,
-                    context.Request.Method,
-                    context.Request.Path,
-                    exception.Message);
+                _logger.LogWarning("{ExceptionType} occurred while processing {Method} {Path}: {Message}",
+                    ex.GetType().Name, context.Request.Method, context.Request.Path, ex.Message);
             }
+
+            var message = logAsError ? "An unexpected error occurred. Please try again later." : ex.Message;
 
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)statusCode;
 
             var response = new
             {
-                message = message,
+                message,
                 statusCode = context.Response.StatusCode,
                 timestamp = DateTime.UtcNow
             };
 
-            var jsonResponse = JsonSerializer.Serialize(response);
+            var json = JsonSerializer.Serialize(response);
 
-            return context.Response.WriteAsync(jsonResponse);
+            await context.Response.WriteAsync(json);
         }
     }
 }

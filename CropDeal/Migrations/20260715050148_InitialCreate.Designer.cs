@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CropDeal.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260706063023_InitialCreate")]
+    [Migration("20260715050148_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
