@@ -28,7 +28,12 @@ namespace CropDeal.Services
                 throw new NotFoundException("Transaction not found");
 
             if (callerDealerId != null && transaction.DealerId != callerDealerId)
-                throw new ForbiddenException("You do not have permission to invoice this transaction.");
+                throw new ForbiddenException("You do not have permission to invoice this transaction.");    
+
+            var existingInvoice= await _invoiceRepository.GetInvoiceByTransactionIdAsync(transactionId);
+            if (existingInvoice != null)
+                throw new BadRequestException("An invoice for this transaction already exists.");
+            
 
             var invoice = new Invoice
             {

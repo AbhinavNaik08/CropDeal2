@@ -27,6 +27,12 @@ namespace CropDeal.Repositories
                 .Include(i => i.Transaction)
                 .FirstOrDefaultAsync(i => i.Id == invoiceId);
         }
+
+        public async Task<Invoice?> GetInvoiceByTransactionIdAsync(int transactionId)
+        {
+            return await _context.Invoices.Include(i=>i.Transaction)
+                .FirstOrDefaultAsync(i => i.TransactionId == transactionId);
+        }
         public async Task<IEnumerable<Invoice?>> GetAllInvoiceAsync()
         {
             return await _context.Invoices
@@ -40,5 +46,7 @@ namespace CropDeal.Repositories
                 .Where(i => i.Transaction != null && i.Transaction.DealerId == dealerId)
                 .ToListAsync();
         }
+
+        
     }
 }

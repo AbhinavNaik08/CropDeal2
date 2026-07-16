@@ -8,6 +8,8 @@ namespace CropDeal.Interfaces
 
         Task<Invoice?> GetInvoiceByIdAsync(int invoiceId);
 
+        Task<Invoice?> GetInvoiceByTransactionIdAsync(int transactionId);
+
         Task<List<Invoice>> GetInvoicesByDealerAsync(int dealerId);
         Task<IEnumerable<Invoice?>> GetAllInvoiceAsync();
     }

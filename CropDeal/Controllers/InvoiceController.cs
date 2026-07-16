@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using CropDeal.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-
+using System.Data.Common;
+using System.Transactions;
+using CropDeal.DTOs.Invoice;
 namespace CropDeal.Controllers
 {
     [ApiController]
@@ -40,7 +42,17 @@ namespace CropDeal.Controllers
 
             var invoice = await _invoiceService.CreateInvoiceAsync(transactionId, callerDealerId);
 
-            return Ok(invoice);
+            var result= new InvoiceDto
+            {
+                Id=invoice.Id,
+                TransactionId=invoice.TransactionId,
+                Date=invoice.Date,
+                DealerId=invoice.Transaction?.DealerId,
+                Amount=invoice.Transaction?.Amount
+            };
+
+
+            return Ok(result);
         }
 
         [Authorize(Roles = "Dealer,Admin")]
@@ -52,7 +64,15 @@ namespace CropDeal.Controllers
             if (invoice == null)
                 return NotFound();
 
-            return Ok(invoice);
+            var result= new InvoiceDto
+            {
+                Id=invoice.Id,
+                TransactionId=invoice.TransactionId,
+                Date=invoice.Date,
+                DealerId=invoice.Transaction?.DealerId,
+                Amount=invoice.Transaction?.Amount
+            };
+            return Ok(result);
         }
 
         [Authorize(Roles = "Dealer")]
@@ -66,7 +86,16 @@ namespace CropDeal.Controllers
 
             var invoices = await _invoiceService.GetInvoicesByDealerAsync(dealerId.Value);
 
-            return Ok(invoices);
+            var result= invoices.Select(invoice => new InvoiceDto
+            {
+                Id = invoice.Id,
+                TransactionId = invoice.TransactionId,
+                Date = invoice.Date,
+                DealerId = invoice.Transaction?.DealerId,
+                Amount = invoice.Transaction?.Amount
+            });
+
+            return Ok(result);
         }
 
         [Authorize(Roles = "Admin")]
@@ -75,7 +104,16 @@ namespace CropDeal.Controllers
         {
             var invoices = await _invoiceService.GetInvoicesByDealerAsync(dealerId);
 
-            return Ok(invoices);
+            var result= invoices.Select(invoice => new InvoiceDto
+            {
+                Id = invoice.Id,
+                TransactionId = invoice.TransactionId,
+                Date = invoice.Date,
+                DealerId = invoice.Transaction?.DealerId,
+                Amount = invoice.Transaction?.Amount
+            });
+
+            return Ok(result);
         }
     }
 }
