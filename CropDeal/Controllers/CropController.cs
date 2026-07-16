@@ -47,7 +47,18 @@ namespace CropDeal.Controllers
 
             var createdCrop = await _cropService.PublishCropAsync(crop);
 
-            return Ok(createdCrop);
+            var result= new CropDto
+            {
+                Id=createdCrop.Id,
+                CropName=createdCrop.CropName,
+                CropType=createdCrop.CropType,
+                Quantity=createdCrop.Quantity,
+                ExpectedPrice=createdCrop.ExpectedPrice,
+                Location=createdCrop.Location,
+                FarmerId=createdCrop.FarmerId
+            };
+
+            return Ok(result);
         }
 
         [Authorize(Roles = "Farmer,Dealer,Admin")]
@@ -79,7 +90,17 @@ namespace CropDeal.Controllers
             if (crop == null)
                 return NotFound();
 
-            return Ok(crop);
+            var result = new CropDto
+            {
+                Id=crop.Id,
+                CropName=crop.CropName,
+                CropType=crop.CropType,
+                Quantity=crop.Quantity,
+                ExpectedPrice=crop.ExpectedPrice,
+                Location=crop.Location,
+                FarmerId=crop.FarmerId
+            };
+            return Ok(result);
         }
 
         [Authorize(Roles = "Farmer,Dealer,Admin")]
@@ -125,7 +146,18 @@ namespace CropDeal.Controllers
                 return NotFound("Crop not found.");
             }
 
-            return Ok(updatedCrop);
+            var result = new CropDto
+            {
+                Id = updatedCrop.Id,
+                CropName = updatedCrop.CropName,
+                CropType = updatedCrop.CropType,
+                Quantity = updatedCrop.Quantity,
+                ExpectedPrice = updatedCrop.ExpectedPrice,
+                Location = updatedCrop.Location,
+                FarmerId = updatedCrop.FarmerId
+            };
+
+            return Ok(result);
         }
     }
 }

@@ -42,7 +42,17 @@ namespace CropDeal.Controllers
                 Quantity = dto.Quantity
             };
 
-            var result = await _transactionService.CreateTransactionAsync(transaction);
+            var created = await _transactionService.CreateTransactionAsync(transaction);
+
+            var result= new TransactionDto
+            {
+                Id=created.Id,
+                CropId=created.CropId,
+                CropName=created.Crop?.CropName,
+                DealerId=created.DealerId,
+                Quantity=created.Quantity,
+                Amount=created.Amount
+            };
 
             return Ok(result);
         }
@@ -58,7 +68,17 @@ namespace CropDeal.Controllers
 
             var transactions = await _transactionService.GetTransactionsByDealerAsync(dealerId.Value);
 
-            return Ok(transactions);
+            var result= transactions.Select(t=> new TransactionDto
+            {
+                Id=t.Id,
+                CropId=t.CropId,
+                CropName=t.Crop?.CropName,
+                DealerId=t.DealerId,
+                Quantity=t.Quantity,
+                Amount=t.Amount
+            });
+
+            return Ok(result);
         }
 
         [Authorize(Roles = "Admin")]
@@ -67,7 +87,17 @@ namespace CropDeal.Controllers
         {
             var transactions = await _transactionService.GetTransactionsByDealerAsync(dealerId);
 
-            return Ok(transactions);
+            var result= transactions.Select(t=> new TransactionDto
+            {
+                Id=t.Id,
+                CropId=t.CropId,
+                CropName=t.Crop?.CropName,
+                DealerId=t.DealerId,
+                Quantity=t.Quantity,
+                Amount=t.Amount
+            });
+
+            return Ok(result);
         }
     }
 }

@@ -38,22 +38,6 @@ namespace CropDeal.Services
 
             var savedCrop = await _cropRepository.AddCropAsync(crop);
 
-            // var subscriptions = await _subscriptionRepository
-            //     .GetSubscriptionsByCropAsync(savedCrop.Id);
-
-            // foreach (var subscription in subscriptions)
-            // {
-            //     var dealerUser = subscription.Dealer?.User;
-
-            //     if (dealerUser != null && !string.IsNullOrEmpty(dealerUser.Email))
-            //     {
-            //         await _emailService.SendEmailAsync(
-            //             dealerUser.Email,
-            //             "New Crop Available",
-            //             $"A new crop '{crop.CropName}' has been published.");
-            //     }
-            // }
-
             return savedCrop;
         }
 
@@ -78,6 +62,28 @@ namespace CropDeal.Services
 
             if (existingCrop == null)
                 return null;
+
+            var updatedCrop= await _cropRepository.UpdateCropAsync(crop);
+
+            var subscriptions = await _subscriptionRepository.GetSubscriptionsByCropAsync(crop.Id);
+
+            foreach(var sub in subscriptions)
+            {
+                var email= sub.Dealer?.User?.Email;
+
+                if(string.IsNullOrEmpty(email))
+                    continue;
+
+                try
+                {
+                    await _emailService.SendEmailAsync(email,"Crop updates", $"'{updatedCrop.CropName}' has been updated, check the latest quantity and price.");
+                }
+
+                catch(Exception ex)
+                {
+                    Console.WriteLine($"Failed to send email to {email}: {ex.Message}");
+                }
+            }
 
             return await _cropRepository.UpdateCropAsync(crop);
         }
