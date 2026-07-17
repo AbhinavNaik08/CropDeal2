@@ -55,7 +55,7 @@ namespace CropDeal.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Dealer,Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetInvoiceById(int id)
         {

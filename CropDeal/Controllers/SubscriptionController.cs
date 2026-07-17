@@ -81,7 +81,13 @@ namespace CropDeal.Controllers
         {
             var subscriptions = await _subscriptionService.GetSubscriptionsByDealerAsync(dealerId);
 
-            return Ok(subscriptions);
+            var result = subscriptions.Select(s=> new SubscriptionDto
+                    {
+                        Id=s.Id,
+                        DealerId=s.DealerId,
+                        CropId=s.CropId
+                    });
+            return Ok(result);
         }
 
         [Authorize(Roles = "Dealer,Admin")]

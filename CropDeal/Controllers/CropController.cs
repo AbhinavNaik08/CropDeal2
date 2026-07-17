@@ -108,8 +108,18 @@ namespace CropDeal.Controllers
         public async Task<IActionResult> GetCropsByFarmer(int farmerId)
         {
             var crops = await _cropService.GetCropsByFarmerAsync(farmerId);
-
-            return Ok(crops);
+            
+            var result = crops.Select(c => new CropDto
+            {
+                Id = c.Id,
+                FarmerId = c.FarmerId,
+                CropName = c.CropName,
+                CropType = c.CropType,
+                Quantity = c.Quantity,
+                ExpectedPrice = c.ExpectedPrice,
+                Location = c.Location
+            });
+            return Ok(result);
         }
 
         [Authorize(Roles = "Farmer,Admin")]

@@ -34,7 +34,6 @@ namespace CropDeal.Services
 
         public async Task<string> RegisterAsync(RegisterDto registerDto)
         {
-            //create user object
             var user = new ApplicationUser
             {
                 UserName = registerDto.Email,
@@ -42,7 +41,6 @@ namespace CropDeal.Services
                 FullName = registerDto.FullName
             };
 
-            //creates user, hashes the pass, stores in table
             var result = await _userManager.CreateAsync(user, registerDto.Password);
 
             if (!result.Succeeded)
@@ -50,16 +48,13 @@ namespace CropDeal.Services
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
                 throw new BadRequestException(errors);
             }
-            // Ensure role exists
             if (!await _roleManager.RoleExistsAsync(registerDto.Role))
             {
                 await _roleManager.CreateAsync(new IdentityRole(registerDto.Role));
             }
 
-            // Assign role
             await _userManager.AddToRoleAsync(user, registerDto.Role);
 
-            // Create domain record
             if (registerDto.Role == "Farmer")
             {
                 var farmer = new Farmer

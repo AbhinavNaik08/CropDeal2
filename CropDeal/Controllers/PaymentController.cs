@@ -15,15 +15,14 @@ namespace CropDeal.Controllers
             _paymentService = paymentService;
         }
 
-        [Authorize(Roles = "Dealer,Admin")]
+        //no need of admins to do payment
+        [Authorize(Roles = "Dealer")]
         [HttpPost("{transactionId}")]
         public async Task<IActionResult> ProcessPayment(int transactionId)
         {
             int? callerDealerId = null;
 
-            if (!User.IsInRole("Admin"))
-            {
-                var userId = User.FindFirst("UserId")?.Value;
+            var userId = User.FindFirst("UserId")?.Value;
                 if (string.IsNullOrEmpty(userId))
                     return Unauthorized();
 
@@ -31,7 +30,6 @@ namespace CropDeal.Controllers
 
                 if (callerDealerId == null)
                     return BadRequest("No dealer profile found for this account.");
-            }
 
             var result = await _paymentService.ProcessPaymentAsync(transactionId, callerDealerId);
 
