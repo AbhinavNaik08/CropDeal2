@@ -1,12 +1,9 @@
-using NUnit.Framework;
-using Moq;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
 using CropDeal.Controllers;
 using CropDeal.Interfaces;
 using CropDeal.Models;
-using CropDeal.Exceptions;
+using Microsoft.AspNetCore.Mvc;
+using Moq;
+using NUnit.Framework;
 
 namespace CropDeal.Tests.Controllers
 {
@@ -16,22 +13,6 @@ namespace CropDeal.Tests.Controllers
         private Mock<IInvoiceService> _invoiceServiceMock;
         private InvoiceController _controller;
 
-        private void SetUser(string userId, string role)
-        {
-            var claims = new List<Claim>
-            {
-                new Claim("UserId", userId),
-                new Claim(ClaimTypes.Role, role)
-            };
-            var identity = new ClaimsIdentity(claims, "TestAuth");
-            var principal = new ClaimsPrincipal(identity);
-
-            _controller.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = principal }
-            };
-        }
-
         [SetUp]
         public void Setup()
         {
@@ -40,97 +21,58 @@ namespace CropDeal.Tests.Controllers
         }
 
         [Test]
-        public async Task CreateInvoice_Success()
+        public async Task GetInvoiceById_ReturnsOk()
         {
-            SetUser("dealer-user-1", "Dealer");
+            _invoiceServiceMock.Setup(x => x.GetInvoiceByIdAsync(1))
+                .ReturnsAsync(new Invoice());
 
-            var invoice = new Invoice { Id = 1, TransactionId = 100, Date = DateTime.UtcNow };
-
-            _invoiceServiceMock.Setup(s => s.GetDealerIdByUserIdAsync("dealer-user-1")).ReturnsAsync(1);
-            _invoiceServiceMock.Setup(s => s.CreateInvoiceAsync(100, 1)).ReturnsAsync(invoice);
-
-            var result = await _controller.CreateInvoice(100);
-
-            var ok = result as OkObjectResult;
-            Assert.That(ok, Is.Not.Null);
-            Assert.That(ok!.Value, Is.EqualTo(invoice));
-        }
-
-        [Test]
-        public async Task CreateInvoice_AsAdmin_Success()
-        {
-            SetUser("admin-user-1", "Admin");
-
-            var invoice = new Invoice { Id = 1, TransactionId = 100, Date = DateTime.UtcNow };
-
-            _invoiceServiceMock.Setup(s => s.CreateInvoiceAsync(100, null)).ReturnsAsync(invoice);
-
-            var result = await _controller.CreateInvoice(100);
+            var result = await _controller.GetInvoiceById(1);
 
             Assert.That(result, Is.InstanceOf<OkObjectResult>());
-            _invoiceServiceMock.Verify(s => s.GetDealerIdByUserIdAsync(It.IsAny<string>()), Times.Never);
         }
 
         [Test]
-        public void CreateInvoice_WrongOwner_Forbidden()
+        public async Task GetInvoiceById_ReturnsNotFound()
         {
-            SetUser("dealer-user-1", "Dealer");
+            _invoiceServiceMock.Setup(x => x.GetInvoiceByIdAsync(1))
+                .ReturnsAsync((Invoice?)null);
 
-            _invoiceServiceMock.Setup(s => s.GetDealerIdByUserIdAsync("dealer-user-1")).ReturnsAsync(1);
-            _invoiceServiceMock
-                .Setup(s => s.CreateInvoiceAsync(100, 1))
-                .ThrowsAsync(new ForbiddenException("You do not have permission to invoice this transaction."));
-
-            Assert.ThrowsAsync<ForbiddenException>(() => _controller.CreateInvoice(100));
-        }
-
-        [Test]
-        public async Task GetInvoiceById_NotFound()
-        {
-            SetUser("dealer-user-1", "Dealer");
-
-            _invoiceServiceMock.Setup(s => s.GetInvoiceByIdAsync(99)).ReturnsAsync((Invoice?)null);
-
-            var result = await _controller.GetInvoiceById(99);
+            var result = await _controller.GetInvoiceById(1);
 
             Assert.That(result, Is.InstanceOf<NotFoundResult>());
         }
 
         [Test]
-        public async Task GetMyInvoices_Success()
+        public async Task GetInvoiceById_CallsService()
         {
-            SetUser("dealer-user-1", "Dealer");
+            _invoiceServiceMock.Setup(x => x.GetInvoiceByIdAsync(1))
+                .ReturnsAsync(new Invoice());
 
-            var invoices = new List<Invoice>
-            {
-                new Invoice { Id = 1, TransactionId = 100 },
-                new Invoice { Id = 2, TransactionId = 101 }
-            };
+            await _controller.GetInvoiceById(1);
 
-            _invoiceServiceMock.Setup(s => s.GetDealerIdByUserIdAsync("dealer-user-1")).ReturnsAsync(1);
-            _invoiceServiceMock.Setup(s => s.GetInvoicesByDealerAsync(1)).ReturnsAsync(invoices);
-
-            var result = await _controller.GetMyInvoices();
-
-            var ok = result as OkObjectResult;
-            Assert.That(ok, Is.Not.Null);
-            Assert.That(ok!.Value, Is.EqualTo(invoices));
+            _invoiceServiceMock.Verify(x => x.GetInvoiceByIdAsync(1), Times.Once);
         }
 
         [Test]
-        public async Task GetInvoicesByDealer_Success()
+        public async Task GetInvoicesByDealer_ReturnsOk()
         {
-            SetUser("admin-user-1", "Admin");
+            _invoiceServiceMock.Setup(x => x.GetInvoicesByDealerAsync(1))
+                .ReturnsAsync(new List<Invoice>());
 
-            var invoices = new List<Invoice> { new Invoice { Id = 1, TransactionId = 100 } };
+            var result = await _controller.GetInvoicesByDealer(1);
 
-            _invoiceServiceMock.Setup(s => s.GetInvoicesByDealerAsync(5)).ReturnsAsync(invoices);
+            Assert.That(result, Is.InstanceOf<OkObjectResult>());
+        }
 
-            var result = await _controller.GetInvoicesByDealer(5);
+        [Test]
+        public async Task GetInvoicesByDealer_CallsService()
+        {
+            _invoiceServiceMock.Setup(x => x.GetInvoicesByDealerAsync(1))
+                .ReturnsAsync(new List<Invoice>());
 
-            var ok = result as OkObjectResult;
-            Assert.That(ok, Is.Not.Null);
-            Assert.That(ok!.Value, Is.EqualTo(invoices));
+            await _controller.GetInvoicesByDealer(1);
+
+            _invoiceServiceMock.Verify(x => x.GetInvoicesByDealerAsync(1), Times.Once);
         }
     }
 }

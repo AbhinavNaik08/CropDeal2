@@ -34,6 +34,10 @@ namespace CropDeal.Services
 
         public async Task<string> RegisterAsync(RegisterDto registerDto)
         {
+            if(registerDto.Role != "Farmer" && registerDto.Role != "Dealer")
+            {
+                throw new BadRequestException("Invalid role. Role must be either 'Farmer' or 'Dealer'.");
+            }
             var user = new ApplicationUser
             {
                 UserName = registerDto.Email,

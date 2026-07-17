@@ -12,6 +12,7 @@ using CropDeal.Interfaces;
 using CropDeal.Services;
 using CropDeal.Middleware;
 using CropDeal.Repositories;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,6 +59,7 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 // JWT Settings
 builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection("JwtSettings"));
+
 
 var jwtSettings = builder.Configuration
     .GetSection("JwtSettings")
@@ -140,6 +142,8 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+
+
 // Global Exception Middleware
 app.UseMiddleware<ExceptionMiddleware>();
 
@@ -176,6 +180,23 @@ using (var scope = app.Services.CreateScope())
             await roleManager.CreateAsync(new IdentityRole(role));
         }
     }
+    // Seed admin
+    var userManager= scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+    if(await userManager.FindByEmailAsync("admin@codelearnfast.com") == null)
+    {
+        var adminUser = new ApplicationUser
+        {
+            UserName = "admin@codelearnfast.com",
+            Email = "admin@codelearnfast.com",
+            FullName= "Cropdeal Admin"
+        };
+        await userManager.CreateAsync(adminUser, "Password@123");
+        await userManager.AddToRoleAsync(adminUser, "Admin");
+
+    }
 }
+
+
 
 app.Run();

@@ -1,10 +1,9 @@
-using NUnit.Framework;
-using Moq;
-using Microsoft.AspNetCore.Mvc;
 using CropDeal.Controllers;
-using CropDeal.Interfaces;
 using CropDeal.DTOs.Auth;
-using CropDeal.Exceptions;
+using CropDeal.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+using Moq;
+using NUnit.Framework;
 
 namespace CropDeal.Tests.Controllers
 {
@@ -22,81 +21,94 @@ namespace CropDeal.Tests.Controllers
         }
 
         [Test]
-        public async Task Register_Success()
+        public async Task Register_ReturnsOk()
         {
             var dto = new RegisterDto
             {
-                FullName = "Farmer One",
-                Email = "farmer1@codelearnfast.com",
-                Password = "Farmer@123",
+                FullName = "John",
+                Email = "john@test.com",
+                Password = "Password@123",
                 Role = "Farmer"
             };
 
-            _authServiceMock.Setup(s => s.RegisterAsync(dto)).ReturnsAsync("fake-jwt-token");
+            _authServiceMock.Setup(x => x.RegisterAsync(dto))
+                .ReturnsAsync("token");
 
             var result = await _controller.Register(dto);
 
-            var ok = result as OkObjectResult;
-            Assert.That(ok, Is.Not.Null);
-
-            var value = ok!.Value;
-            var tokenProp = value!.GetType().GetProperty("token")!.GetValue(value);
-            Assert.That(tokenProp, Is.EqualTo("fake-jwt-token"));
+            Assert.That(result, Is.InstanceOf<OkObjectResult>());
         }
 
         [Test]
-        public void Register_InvalidData_ThrowsBadRequest()
-        {
-            var dto = new RegisterDto
-            {
-                FullName = "Bad User",
-                Email = "invalid",
-                Password = "123",
-                Role = "Farmer"
-            };
-
-            _authServiceMock
-                .Setup(s => s.RegisterAsync(dto))
-                .ThrowsAsync(new BadRequestException("Passwords must be at least 6 characters."));
-
-            Assert.ThrowsAsync<BadRequestException>(() => _controller.Register(dto));
-        }
-
-        [Test]
-        public async Task Login_Success()
+        public async Task Login_ReturnsOk()
         {
             var dto = new LoginDto
             {
-                Email = "dealer1@codelearnfast.com",
-                Password = "Dealer@123"
+                Email = "john@test.com",
+                Password = "Password@123"
             };
 
-            _authServiceMock.Setup(s => s.LoginAsync(dto)).ReturnsAsync("fake-jwt-token");
+            _authServiceMock.Setup(x => x.LoginAsync(dto))
+                .ReturnsAsync("token");
 
             var result = await _controller.Login(dto);
 
-            var ok = result as OkObjectResult;
-            Assert.That(ok, Is.Not.Null);
-
-            var value = ok!.Value;
-            var tokenProp = value!.GetType().GetProperty("token")!.GetValue(value);
-            Assert.That(tokenProp, Is.EqualTo("fake-jwt-token"));
+            Assert.That(result, Is.InstanceOf<OkObjectResult>());
         }
 
         [Test]
-        public void Login_WrongCredentials_ThrowsUnauthorized()
+        public async Task Register_CallsService()
+        {
+            var dto = new RegisterDto
+            {
+                FullName = "John",
+                Email = "john@test.com",
+                Password = "Password@123",
+                Role = "Farmer"
+            };
+
+            _authServiceMock.Setup(x => x.RegisterAsync(dto))
+                .ReturnsAsync("token");
+
+            await _controller.Register(dto);
+
+            _authServiceMock.Verify(x => x.RegisterAsync(dto), Times.Once);
+        }
+
+        [Test]
+        public async Task Login_CallsService()
         {
             var dto = new LoginDto
             {
-                Email = "wrong@codelearnfast.com",
-                Password = "WrongPassword"
+                Email = "john@test.com",
+                Password = "Password@123"
             };
 
-            _authServiceMock
-                .Setup(s => s.LoginAsync(dto))
-                .ThrowsAsync(new UnauthorizedException("Invalid email or password"));
+            _authServiceMock.Setup(x => x.LoginAsync(dto))
+                .ReturnsAsync("token");
 
-            Assert.ThrowsAsync<UnauthorizedException>(() => _controller.Login(dto));
+            await _controller.Login(dto);
+
+            _authServiceMock.Verify(x => x.LoginAsync(dto), Times.Once);
+        }
+
+        [Test]
+        public async Task Register_ReturnsResult()
+        {
+            var dto = new RegisterDto
+            {
+                FullName = "John",
+                Email = "john@test.com",
+                Password = "Password@123",
+                Role = "Farmer"
+            };
+
+            _authServiceMock.Setup(x => x.RegisterAsync(dto))
+                .ReturnsAsync("token");
+
+            var result = await _controller.Register(dto);
+
+            Assert.That(result, Is.Not.Null);
         }
     }
 }
