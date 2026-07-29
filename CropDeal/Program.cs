@@ -13,15 +13,31 @@ using CropDeal.Services;
 using CropDeal.Middleware;
 using CropDeal.Repositories;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Controllers, using ignore cycles because it was looping when fetching user
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler =
             System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    })
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+
+            return new BadRequestObjectResult(new
+            {
+                message = "Invalid request data."    
+            });
+        };
     });
 
 // DbContext
