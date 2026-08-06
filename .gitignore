@@ -21,6 +21,6 @@ Thumbs.db
 # Entity Framework
 Migrations/*.Designer.cs
 
-# Application settings (keep local secrets out of Git)
-appsettings.json
-appsettings.*.json
+# # Application settings (keep local secrets out of Git)
+# appsettings.json
+# appsettings.*.json
